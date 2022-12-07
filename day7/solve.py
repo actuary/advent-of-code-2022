@@ -1,6 +1,4 @@
-from dataclasses import dataclass
-from enum import Enum
-from typing import Optional, Tuple
+
 
 def get_data(filepath="input"):
     return open(filepath, "r").read().splitlines()
@@ -35,7 +33,6 @@ class Node:
     def __init__(self, name, data):
         self.name = name
         self.data = data
-        self.size = data
         self.children = {}
         self.parent = None
 
@@ -46,19 +43,21 @@ class Node:
     @property
     def is_dir(self) -> bool:
         return self.data == 0
+
+    def __iter__(self):
+        return iter(self.children.items())
     
 
-def get_sizes(tree, size_dirs: dict, limit=70000000) -> int:
+def get_sizes(tree, size_dirs: dict) -> int:
     if tree == None:
         return 0
 
     if tree.is_dir:
-        size = sum(get_sizes(child, size_dirs, limit) 
-                   for _, child in tree.children.items())
-        if size <= limit:
-            size_dirs[tree.name] = size
+        size = sum(get_sizes(child, size_dirs) for _, child in tree)
+        size_dirs[tree.name] = size
         return size
     return tree.data
+
 
 def build_tree(data):
     head = Node("/", 0)
@@ -83,26 +82,19 @@ def build_tree(data):
 
 def part1(data=test_data()):
     head = build_tree(data)
-    small_dirs = {}
-    get_sizes(head, small_dirs, 100000)
-    return sum(small_dirs.values())
+    dir_sizes = {}
+    get_sizes(head, dir_sizes)
+    return sum(size for size in dir_sizes.values() if size <= 100000)
 
 
 def part2(data=test_data()):
     head = build_tree(data)
-    dirs = {}
-    get_sizes(head, dirs)
+    dir_sizes = {}
+    get_sizes(head, dir_sizes)
 
-    root_dir_size = dirs["/"] 
-    unused_space = 70000000 - root_dir_size
-    need_to_free_space = 30000000 - unused_space
-    smallest_dir = 70000000
-    for _, size in dirs.items():
-        if size >= need_to_free_space and size <= smallest_dir:
-            smallest_dir = size
-
-    return smallest_dir
-
+    root_dir_size = dir_sizes["/"] 
+    threshold = 30000000 - (70000000 - root_dir_size)
+    return min(value for value in dir_sizes.values() if value >= threshold)
 
 
 if __name__ == "__main__":
