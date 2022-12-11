@@ -73,7 +73,7 @@ def build_tree(data):
                 pass
             case ["dir", directory]:
                 tree.add_node(Node(f"{tree.name}{directory}/", 0))
-            case size, filename:
+            case [size, filename]:
                 tree.add_node(Node(f"{tree.name}{filename}", int(size)))
             case _:
                 raise RuntimeError
