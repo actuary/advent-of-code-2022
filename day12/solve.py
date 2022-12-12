@@ -17,12 +17,14 @@ abdefghi""".splitlines()
     
 
 def make_graph(data):
+    def in_bounds(y, x):
+        return 0 <= y < len(data) and 0 <= x < len(data[y]) 
 
     SENTINELS = {
         "S": "a",
         "E": "z"
     }
-    directions = [(0, 1), (-1, 0), (0, -1), (1, 0)]
+    DIRECTIONS = [(0, 1), (-1, 0), (0, -1), (1, 0)]
   
     g = defaultdict(dict)
     source = None
@@ -32,19 +34,18 @@ def make_graph(data):
         for x in range(len(data[y])):
             vertex = (y, x)
                 
-            
             if data[y][x] == "S":
                 source = vertex
             elif data[y][x] == "E":
                 destination = vertex
 
             value = SENTINELS.get(data[y][x], data[y][x])
-            for direction in directions:
+            for direction in DIRECTIONS:
                 dx, dy = direction
                 new_x, new_y = x + dx, y + dy
                 neighbour = (new_y, new_x)
 
-                if 0 <= new_x < len(data[y]) and 0 <= new_y < len(data):
+                if in_bounds(*neighbour):
                     neighbour_value = data[new_y][new_x]
                     neighbour_value = SENTINELS.get(neighbour_value, neighbour_value)
                     distance = ord(neighbour_value) - ord(value)
@@ -88,7 +89,8 @@ def part1(data=test_data()):
 def part2(data=test_data()):
     g, _, destination = make_graph(data)
     
-    starting_points = [vertex for vertex in g if data[vertex[0]][vertex[1]] in ("a", "S")]
+    starting_points = [vertex for vertex in g 
+                              if data[vertex[0]][vertex[1]] in ("a", "S")]
 
     # v slow but no more thinking today
     return min(shortest_path(g, starting_point)[0][destination] 
