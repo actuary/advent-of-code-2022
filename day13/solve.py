@@ -97,15 +97,18 @@ def check_pair(pair: Tuple[list | int, list | int]) -> Comparison:
         case [*left], int(right):
             if not left:
                 return Comparison.LESS
+
             return check_pair((left, [right]))
         case int(left), [*right]:
             if not right:
                 return Comparison.MORE
+
             return check_pair(([left], right))
         case int(left), int(right):
             if left < right:
                 return Comparison.LESS
-            elif left == right:
+
+            if left == right:
                 return Comparison.SAME
             
             return Comparison.MORE
