@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from typing import Optional, Tuple
 from enum import Enum
 import functools
+import itertools
+import operator
 
 def get_data(filepath="input"):
     return open(filepath, "r").read().splitlines()
@@ -32,15 +34,6 @@ def test_data():
 [1,[2,[3,[4,[5,6,7]]]],8,9]
 [1,[2,[3,[4,[5,6,0]]]],8,9]""".splitlines()
 
-# Element = [List|Number*]
-#
-#
-#
-#
-#
-#
-test_data_2 = """[[4,4],4,4]
-[[4,4],4,4,4]""".splitlines()
 
 def parse_number(list_string: str, idx) -> Tuple[int, int]:
     value = 0
@@ -74,59 +67,67 @@ def parse_list(list_string: str, idx=0) -> Tuple[int, list | int]:
 
     raise RuntimeError
 
+
 class Comparison(Enum):
     LESS = -1
     MORE = 0
     SAME = 1
 
-def check_pair(pair: Tuple[list | int, list | int]) -> Comparison:
-    match pair:
+
+def compare(left: int, right: int) -> Comparison:
+    if left < right:
+        return Comparison.LESS
+
+    if left > right:
+        return Comparison.MORE
+    
+    return Comparison.SAME
+
+
+def check_pair(l: list | int, r: list | int) -> Comparison:
+    match l, r:
         case [*left], [*right]:
             for left_val, right_val in zip(left, right):
-                result = check_pair((left_val, right_val))
+                result = check_pair(left_val, right_val)
                 if result != Comparison.SAME:
                     return result
             
-            if len(left) < len(right):
-                return Comparison.LESS
-            
-            if len(left) == len(right):
-                return Comparison.SAME
-
-            return Comparison.MORE
+            return compare(len(left), len(right))
 
         case [*left], int(right):
-            return check_pair((left, [right]))
+            return check_pair(left, [right])
 
         case int(left), [*right]:
-            return check_pair(([left], right))
+            return check_pair([left], right)
 
         case int(left), int(right):
-            if left < right:
-                return Comparison.LESS
+            return compare(left, right)
 
-            if left == right:
-                return Comparison.SAME
-            
-            return Comparison.MORE
         case _:
             raise RuntimeError
+
 
 def part1(data=test_data()):
     data = [row for row in data if row]
     it = iter(data)
     pairs = [(parse_list(x)[1], parse_list(next(it))[1]) for x in it]
     
-    return sum(idx for idx, pair in enumerate(pairs, 1) if check_pair(pair) != Comparison.MORE)
+    return sum(idx for idx, pair in enumerate(pairs, 1) 
+                   if check_pair(*pair) != Comparison.MORE)
+
 
 def part2(data=test_data()):
+    SPECIAL_PKTS = [[[6]], [[2]]]
     packets = [parse_list(row)[1] for row in data if row]
-    packets.append([[6]])
-    packets.append([[2]])
+    packets.extend(SPECIAL_PKTS)
 
-    sort_key = functools.cmp_to_key(lambda x, y: check_pair((x, y)).value)
+    sort_key = functools.cmp_to_key(lambda x, y: check_pair(x, y).value)
     sorted_packets = sorted(packets, key=sort_key)
-    return (sorted_packets.index([[6]]) + 1) * (sorted_packets.index([[2]]) + 1)
+
+    return functools.reduce(operator.mul, 
+                            (sorted_packets.index(pkt)+1 for pkt in SPECIAL_PKTS), 
+                            1)
+
 
 if __name__ == "__main__":
     print(part1())
