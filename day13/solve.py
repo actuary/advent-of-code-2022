@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional, Tuple
 from enum import Enum
+import functools
 
 def get_data(filepath="input"):
     return open(filepath, "r").read().splitlines()
@@ -95,15 +96,11 @@ def check_pair(pair: Tuple[list | int, list | int]) -> Comparison:
             return Comparison.MORE
 
         case [*left], int(right):
-            if not left:
-                return Comparison.LESS
-
             return check_pair((left, [right]))
-        case int(left), [*right]:
-            if not right:
-                return Comparison.MORE
 
+        case int(left), [*right]:
             return check_pair(([left], right))
+
         case int(left), int(right):
             if left < right:
                 return Comparison.LESS
@@ -122,7 +119,6 @@ def part1(data=test_data()):
     
     return sum(idx for idx, pair in enumerate(pairs, 1) if check_pair(pair) != Comparison.MORE)
 
-import functools
 def part2(data=test_data()):
     packets = [parse_list(row)[1] for row in data if row]
     packets.append([[6]])
