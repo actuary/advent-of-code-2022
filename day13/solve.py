@@ -110,7 +110,8 @@ def check_pair(l: list | int, r: list | int) -> Comparison:
 def part1(data=test_data()):
     data = [row for row in data if row]
     it = iter(data)
-    pairs = [(parse_list(x)[1], parse_list(next(it))[1]) for x in it]
+    pairs = [(parse_list(list_string)[1], parse_list(next(it))[1]) 
+             for list_string in it]
     
     return sum(idx for idx, pair in enumerate(pairs, 1) 
                    if check_pair(*pair) != Comparison.MORE)
